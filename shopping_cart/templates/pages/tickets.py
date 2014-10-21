@@ -19,21 +19,36 @@ def get_context(context):
 
 @frappe.whitelist()
 def get_tickets(start=0):
-	tickets = frappe.db.sql("""select name, subject, status, creation 
-		from `tabSupport Ticket` where raised_by=%s 
+	tickets = frappe.db.sql("""select name, subject, status, creation
+		from `tabSupport Ticket` where raised_by=%s
 		order by modified desc
 		limit %s, 20""", (frappe.session.user, cint(start)), as_dict=True)
 	for t in tickets:
 		t.creation = formatdate(t.creation)
-	
+
 	return tickets
-	
+
 @frappe.whitelist()
 def make_new_ticket(subject, message):
 	if not (subject and message):
 		raise frappe.throw(_("Please write something in subject and message!"))
-		
-	from erpnext.support.doctype.support_ticket.get_support_mails import add_support_communication
-	ticket = add_support_communication(subject, message, frappe.session.user)
-	
+
+	ticket = frappe.get_doc({
+		"doctype":"Support Ticket",
+		"subject": subject,
+		"raised_by": frappe.session.user,
+	})
+	ticket.insert(ignore_permissions=True)
+
+	comm = frappe.get_doc({
+		"doctype":"Communication",
+		"subject": subject,
+		"content": message,
+		"sender": frappe.session.user,
+		"sent_or_received": "Received",
+		"reference_doctype": "Support Ticket",
+		"reference_name": ticket.name
+	})
+	comm.insert(ignore_permissions=True)
+
 	return ticket.name

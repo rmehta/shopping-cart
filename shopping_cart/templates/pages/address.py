@@ -6,7 +6,7 @@ import json
 
 import frappe
 from shopping_cart.shopping_cart.cart import get_lead_or_customer, update_cart_address
-from frappe.widgets.form.meta import get_meta
+from frappe.desk.form.meta import get_meta
 
 no_cache = 1
 no_sitemap = 1

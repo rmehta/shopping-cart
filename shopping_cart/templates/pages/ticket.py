@@ -30,7 +30,12 @@ def add_reply(ticket, message):
 	if doc.raised_by != frappe.session.user:
 		raise frappe.throw(_("You are not allowed to reply to this ticket."), frappe.PermissionError)
 
-	from frappe.core.doctype.communication.communication import _make
-	_make(content=message, sender=doc.raised_by, subject = doc.subject,
-		doctype="Support Ticket", name=doc.name,
-		date=today())
+	comm = frappe.get_doc({
+		"doctype":"Communication",
+		"subject": doc.subject,
+		"content": message,
+		"sender": doc.raised_by,
+		"sent_or_received": "Received"
+	})
+	comm.insert(ignore_permissions=True)
+
